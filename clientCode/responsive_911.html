@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>911 Assistance Chat</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            margin: 0; /* Ensures there's no default margin */
+        }
+
+        #mainContainer {
+            display: flex;
+            flex-direction: column; /* Stacks children vertically */
+            align-items: center; /* Centers children horizontally */
+            width: 75%; /* Adjust based on your preference */
+            margin: auto; /* Centers the container in the page */
+        }
+
+        #pageTitle {
+            color: red; /* Makes the text red */
+            text-align: center; /* Centers the text */
+            font-size: 48px; /* Large font size, adjust as needed */
+            font-weight: bold; /* Makes the font bold */
+            width: 100%; /* Ensures it spans the width of the page */
+            margin-top: 0; /* Removes default top margin */
+            margin-bottom: 20px; /* Adds some space below the title */
+        }
+
+        #chatContainer {
+            width: 75%; 
+            border: 4px solid darkblue; 
+            padding: 10px;
+            box-sizing: border-box;
+            display: inline-block; 
+            margin-bottom: 50px; 
+        }
+
+        #chatBox { 
+            height: 300px; 
+            overflow-y: scroll; 
+            border: 2px solid darkblue; /* Thicker dark blue border */
+            margin-bottom: 10px; 
+            padding: 10px;
+        }
+
+        #userInput, #sendButton { 
+            display: block; /* Ensure these elements don't add unexpected space */
+            margin-bottom: 5px; /* Reduced bottom margin */
+        }
+
+        #userInput { 
+            width: calc(100% - 24px); /* Adjust for the border and padding */
+            border: 2px solid darkblue; /* Thicker dark blue border */
+            padding: 4px; /* Slightly increased padding for visual balance */
+        }
+
+        #sendButton { 
+            width: auto; /* Allows the button to size according to its content */
+            padding: 4px 8px; /* Padding added for visual balance */
+            border: 2px solid darkblue; /* Thicker dark blue border */
+            background-color: lightblue; /* Background color for the button */
+            cursor: pointer;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #mainContainer {
+                width: 90%; /* Make the container wider on smaller screens */
+            }
+
+            #pageTitle {
+                font-size: 32px; /* Smaller font size for the title on smaller screens */
+                margin-bottom: 10px; /* Less space below the title */
+            }
+
+            #chatContainer, #userInput, #sendButton {
+                width: 100%; /* Make these elements take up the full container width */
+            }
+
+            #userInput, #sendButton {
+                font-size: 16px; /* Adjust font size for better readability */
+            }
+
+            #chatBox {
+                height: 200px; /* Adjust chat box height */
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="mainContainer">
+        <h1 id="pageTitle">911 SIMULATOR</h1>
+        <div id="chatContainer">
+            <div id="chatBox"></div>
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Declare global variables
+        var message_stream = [];
+        var lastUserMessageTime = new Date(); // Track the time of the last user message
+        var promptCount = 0; // Initialize prompt counter
+        var n_messages = 0;
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            if (n_messages === 0) {
+                var message = "This is 911. Police, Fire or Ambulance?";
+                appendMessage('911 Operator', message);
+                n_messages += 1;
+            }
+    
+            document.getElementById('sendButton').addEventListener('click', function() {
+                sendMessage();
+            });
+    
+            document.getElementById('userInput').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent the default action to avoid form submission
+                    sendMessage();
+                }
+            });
+    
+            // Start the recursive prompting process
+            promptUserIfInactive();
+        });
+    
+        function sendMessage() {
+            var input = document.getElementById('userInput');
+            var message = input.value.trim();
+    
+            if (message) {
+                appendMessage('User', message);
+                // Update the last message time and reset the prompt counter
+                lastUserMessageTime = new Date();
+                promptCount = 0; // Reset prompt counter
+    
+                // Call the server-side code
+                sendPostRequest(message_stream);
+                input.value = ''; // Clear input after sending
+            }
+        }
+    
+        function promptUserIfInactive() {
+            var currentTime = new Date();
+            var timeSinceLastMessage = currentTime - lastUserMessageTime;
+            var randomDelay = Math.random() * (30000) + 20000; // Random time between 20 seconds and 50 seconds
+    
+            if (promptCount >= 5) {
+                appendMessage('911 Operator', "No response for 5 tries. Terminating chat.");
+                return; // Stop the recursive prompting
+            }
+    
+            if (timeSinceLastMessage >= randomDelay) {
+                var checkInMessage = "Hello. Are you still there? Please respond.";
+                appendMessage('911 Operator', checkInMessage);
+                lastUserMessageTime = new Date();
+                promptCount++;
+            }
+    
+            setTimeout(promptUserIfInactive, randomDelay);
+        }
+    
+        function sendPostRequest(userInput) {
+            const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+            const targetUrl = 'https://script.google.com/macros/s/AKfycby7v__TbX2wNh3iT-wN5f39Ufx1tIQFGpx7XIbergAO-2-YJlkIr9Du1l8MfYPB4x-6/exec';
+    
+            var chatBox = document.getElementById('chatBox');
+            var spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            chatBox.appendChild(spinner);
+            chatBox.scrollTop = chatBox.scrollHeight;
+    
+            const fetchOptions = {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ query: JSON.stringify(message_stream) })
+            };
+    
+            fetch(proxyUrl + targetUrl, fetchOptions)
+                .then(response => response.json())
+                .then(data => {
+                    spinner.remove();
+                    if (data.error) {
+                        console.error('Server returned an error:', data.error);
+                        appendMessage('OpenAI', 'Error: ' + JSON.stringify(data.error));
+                    } else if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                        var response = data.choices[0].message.content;
+                        appendMessage('911 Operator', response);
+                    } else {
+                        console.error('Unexpected response structure:', data);
+                        appendMessage('OpenAI', 'Received unexpected response structure.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    
+        function appendMessage(sender, message) {
+            var chatBox = document.getElementById('chatBox');
+            var messageElement = document.createElement('div');
+            messageElement.textContent = sender + ': ' + message;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+    
+            var role = sender === 'User' ? 'user' : 'assistant';
+            message_stream.push({ role: role, content: message });
+        }
+    </script>
+    
+</body>
+</html>
