@@ -1,4 +1,3 @@
-/*
 function testDoPost() {
   var simulatedEvent = {
     postData: {
@@ -17,74 +16,126 @@ function testDoPost() {
   var result = doPost(simulatedEvent);
   
   // Assuming Logger.log is defined or using console.log for environments like Node.js
-  console.log(result.getContent());
+  // TypeError: result.getContent is not a function
+  //console.log(result.getContent());
+  console.log(result);
 }
-*/
+
 function doPost(e) {
+
+  // Parse the incoming request
+  var requestData = JSON.parse(e.postData.contents);
+  var userMessages = JSON.parse(requestData.query);
+  // turn userMassages into a string
+  userMessages = userMessages.map(function(message) {
+    return message.content;
+  }).join("\n");
   
-    initial_prompt = 'Your role is to simulate a 911 chatbot, offering guidance and support. You are \
-    not on a telephone call. The user has initiated this and you answer as directed below. Your \
-    initial question to user should always \
-    be "police, fire, or ambulance." Depending on their response, either directly by \
-    answering one of these options or by describing their emergency, proceed first by \
-    reassuring them, then asking clarifying questions. If a specific service is requested, \
-    follow up by asking their location, then telling them the service has been called \
-    and they are on the way. If they have not asked for a specific service, ask \
-    clarifying questions to categorize \
-    the chat into one of the predefined scenarios and follow the outlined procedure that \
-    would be most appropriate based on your training. \
-    Your responses should be calm, clear, and informative, prioritizing the users \
-    immediate safety and ensuring appropriate information is relayed for emergency response. \
-    Emphasize clear instructions and questions to assess the situation quickly. \
-    Avoid speculation, advice, or personal opinion, sticking to protocol and facilitating \
-    the connection to the appropriate emergency services. If certain information is \
-    missing or the situation is unclear, ask targeted questions to fill in gaps. Adopt a \
-    supportive tone, reassuring the user while gathering essential details. Your \
-    primary goal is to simulate the scenario accurately, providing a safe space for \
-    understanding emergency protocols and procedures. Stay with the user until emergency services arrive \
-    or the situation is resolved, ensuring they feel supported and informed throughout the process.';
-    
-    // Parse the incoming request
-    var requestData = JSON.parse(e.postData.contents);
-    var userMessages = JSON.parse(requestData.query);
-    
-    // Set up the URL for the OpenAI Chat API
-    var apiUrl = 'https://api.openai.com/v1/chat/completions';
-    
-    // Prepare the data to send in the POST request
-    // Adjust the structure to match the chat completions endpoint requirements
 
-    // Define the initial messages to prepend
-    var initialMessages = [
-        {"role": "system", "content": "you are a 911 operator"},
-        {"role": "user", "content": initial_prompt}
-    ];
+  // call the openai assistants api
+  var OPENAI_API_KEY = 'sk-xxxx'; // Set your OpenAI API key here
+  var ASSISTANT_ID = 'asst_yyyy'; // Set your Assistant ID here
+  var headers = {
+    'Authorization': 'Bearer ' + OPENAI_API_KEY,
+    'Content-Type': 'application/json',
+    'OpenAI-Beta': 'assistants=v1'
+  };
+    // Create a thread
+  var threadResponse = UrlFetchApp.fetch('https://api.openai.com/v1/threads', {
+    'method': 'post',
+    'headers': headers,
+    'muteHttpExceptions': true
+  });
+  if (threadResponse.getResponseCode() !== 200) {
+    console.log("Failed to create thread. Response: " + threadResponse.getContentText());
+    return;
+  }
+  var threadData = JSON.parse(threadResponse.getContentText());
+  var threadId = threadData.id; // Adjust based on actual response format
 
-    // Combine the initial messages with the user messages
-    var message_stream = initialMessages.concat(userMessages);
-    
-    
-    var data = {
-        model: "gpt-4-turbo-preview", // Ensure you're using the correct model for your needs
-        messages : message_stream,
-        temperature : 0.2,
-    };
+  // Send a message to the thread
+  var messageResponse = UrlFetchApp.fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+    'method': 'post',
+    'headers': headers,
+    'payload': JSON.stringify({
+      'role': 'user',
+      'content': userMessages
+    }),
+    'muteHttpExceptions': true
+  });
 
-    var options = {
-      method: 'post',
-      contentType: 'application/json',
-      headers: {
-        'Authorization': 'Bearer xxxx' // Replace YOUR_API_KEY with your actual OpenAI API key
-      },
-      payload: JSON.stringify(data),
-      muteHttpExceptions: true
-    };
-    
-    // Call the OpenAI API
-    var response = UrlFetchApp.fetch(apiUrl, options);
-    var responseText = response.getContentText();
-    return ContentService.createTextOutput(responseText)
-      .setMimeType(ContentService.MimeType.JSON);
+  if (messageResponse.getResponseCode() !== 200) {
+    console.log("Failed to send message. Response: " + messageResponse.getContentText());
+    return;
+  }
+  // Run the thread using the assistant
+  var runResponse = UrlFetchApp.fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
+    'method': 'post',
+    'headers': headers,
+    'payload': JSON.stringify({
+      'assistant_id': ASSISTANT_ID
+    }),
+    'muteHttpExceptions': true
+  });
+
+  if (runResponse.getResponseCode() !== 200) {
+    console.log("Failed to run thread. Response: " + runResponse.getContentText());
+    return;
+  }
+  var runData = JSON.parse(runResponse.getContentText());
+  var runId = runData.id;
+  var status = runData.status;
+  var startTime = new Date().getTime();
+
+  // Poll the run status until it is 'completed'
+  while (status === 'queued' || status === 'in_progress') {
+    Utilities.sleep(500); // Wait for half a second before checking again
+    var checkResponse = UrlFetchApp.fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
+      'method': 'get',
+      'headers': headers,
+      'muteHttpExceptions': true
+    });
+    var checkData = JSON.parse(checkResponse.getContentText());
+  status = checkData.status;
+
+    // Check for timeout to avoid exceeding the execution limit
+    var currentTime = new Date().getTime();
+    if (currentTime - startTime > 29000) { // 29 seconds limit to be safe
+      return "Timeout waiting for the run to complete.";
+    }
+  }
+  // Once the run is completed, fetch the final result
+  if (status === 'completed') {
+    var messagesResponse = UrlFetchApp.fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+      'method': 'get',
+      'headers': headers,
+      'muteHttpExceptions': true
+    });
+  
+    if (messagesResponse.getResponseCode() === 200) {
+      var messagesData = JSON.parse(messagesResponse.getContentText());
+      // Iterate over messages to find the assistant's response
+      for (var i = messagesData.data.length - 1; i >= 0; i--) {
+        var message = messagesData.data[i];
+        if (message.role === 'assistant' && message.content && message.content.length > 0) {
+          // Assuming the first content item contains the text response
+          var contentItem = message.content.find(c => c.type === 'text');
+          if (contentItem && contentItem.text && contentItem.text.value) {
+            return contentItem.text.value; // Return the text value of the assistant's message
+          }
+        }
+      }
+      console.log("Assistant's final response not found.");
+      return;
+    } else {
+      //return "Failed to fetch messages. Response: " + messagesResponse.getContentText();
+      console.log("Failed to fetch messages. Response: " + messagesResponse.getContentText());
+      return;
+    }
+  } else {
+    //return "Run did not complete successfully. Status: " + status;
+    console.log("Run did not complete successfully. Status: " + status);
+    return;
   }
 
-
+}
