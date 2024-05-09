@@ -5,7 +5,7 @@ function testDoPost() {
       contents: JSON.stringify({
         // Adjusting the query to be an array of message objects
         query: JSON.stringify([
-          {"role": "user", "content": "Why is the sky blue (and other metaphysical questions)?"}
+          {"role": "user", "content": "Help, I've fallen and I can't get up!"}
         ])
       }),
       length: 1000 // This is optional; just an example property
@@ -16,8 +16,6 @@ function testDoPost() {
   var result = doPost(simulatedEvent);
   
   // Assuming Logger.log is defined or using console.log for environments like Node.js
-  // TypeError: result.getContent is not a function
-  //console.log(result.getContent());
   console.log(result);
 }
 
@@ -27,14 +25,13 @@ function doPost(e) {
   var requestData = JSON.parse(e.postData.contents);
   var userMessages = JSON.parse(requestData.query);
   // turn userMassages into a string
-  userMessages = userMessages.map(function(message) {
-    return message.content;
-  }).join("\n");
-  
+  //userMessages = userMessages.map(function(message) {
+    //return message.content;
+  //}).join("\n");
 
   // call the openai assistants api
-  var OPENAI_API_KEY = 'sk-xxxx'; // Set your OpenAI API key here
-  var ASSISTANT_ID = 'asst_yyyy'; // Set your Assistant ID here
+  var OPENAI_API_KEY = 'sk-key'; // Set your OpenAI API key here
+  var ASSISTANT_ID = 'asst_num'; // Set your Assistant ID here
   var headers = {
     'Authorization': 'Bearer ' + OPENAI_API_KEY,
     'Content-Type': 'application/json',
@@ -58,8 +55,8 @@ function doPost(e) {
     'method': 'post',
     'headers': headers,
     'payload': JSON.stringify({
-      'role': 'user',
-      'content': userMessages
+      'role': userMessages[0].role,
+      'content': userMessages[0].content
     }),
     'muteHttpExceptions': true
   });

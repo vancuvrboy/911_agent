@@ -122,7 +122,7 @@
 </head>
 <body>
     <div id="mainContainer">
-        <h1 id="pageTitle">911 SIMULATOR</h1>
+        <h1 id="pageTitle">911 AGENT SIMULATOR</h1>
         <p style="font-size: 14px;">Please visit <a href="https://cors-anywhere.herokuapp.com/" target="_blank" rel="noopener noreferrer">https://cors-anywhere.herokuapp.com/</a> to temporarily authorize a CORS proxy.</p>
         <div id="chatContainer">
             <div id="chatBox"></div>
@@ -222,7 +222,7 @@
     
         function sendPostRequest(userInput) {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://script.google.com/macros/s/AKfycby7v__TbX2wNh3iT-wN5f39Ufx1tIQFGpx7XIbergAO-2-YJlkIr9Du1l8MfYPB4x-6/exec';
+            const targetUrl = 'https://script.google.com/macros/s/AKfycbxvHG_7ELRW7JEw2STf5-4vZ1w2alHfcxKQzg_jCbZkuWvqT4VG126SUFJWaEugY0g9hg/exec';
     
             var chatBox = document.getElementById('chatBox');
             var spinner = document.createElement('div');
@@ -264,11 +264,10 @@
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
     
-            if (sender == 'System Message'){ // don't push system messages onto message stream
+            if (sender != 'User'){ // don't push system messages onto message stream
                 return;
             } else { // push onto message stream
-                var role = sender === 'User' ? 'user' : 'assistant';
-                message_stream.push({ role: role, content: message });
+                message_stream = ({ role: role, content: message });
             }
         }
     </script>
