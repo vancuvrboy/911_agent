@@ -267,7 +267,7 @@
             if (sender != 'User'){ // don't push system messages onto message stream
                 return;
             } else { // push onto message stream
-                message_stream = ({ role: role, content: message });
+                message_stream = ({ role: 'user', content: message });
             }
         }
     </script>
