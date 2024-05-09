@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test doPost Function</title>
+</head>
+<body>
+    <h1>Test doPost Function</h1>
+    <button onclick="testDoPost()">Test doPost</button>
+    <script>
+        function testDoPost() {
+            const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+            const targetUrl = 'https://https://script.google.com/macros/s/AKfycbxvHG_7ELRW7JEw2STf5-4vZ1w2alHfcxKQzg_jCbZkuWvqT4VG126SUFJWaEugY0g9hg/exec';
+
+            const simulatedEvent = {
+                type: "application/json",
+                contents: JSON.stringify({
+                    query: JSON.stringify([
+                        { "role": "user", "content": "Help, I've fallen and I can't get up!" }
+                    ])
+                })
+            };
+
+            fetch(proxyUrl + targetUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(simulatedEvent)
+            }).then(response => response.text())
+              .then(data => {
+                  console.log(data);
+                  alert("Server Response: " + data);
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    </script>
+</body>
+</html>
