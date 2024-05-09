@@ -222,8 +222,11 @@
     
         function sendPostRequest(userInput) {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://script.google.com/macros/s/AKfycbxvHG_7ELRW7JEw2STf5-4vZ1w2alHfcxKQzg_jCbZkuWvqT4VG126SUFJWaEugY0g9hg/exec';
+            const targetUrl = 'https://https://script.google.com/macros/s/AKfycbxvHG_7ELRW7JEw2STf5-4vZ1w2alHfcxKQzg_jCbZkuWvqT4VG126SUFJWaEugY0g9hg/exec';
     
+            // append URL as System Message
+            appendMessage('System Message', targetUrl);
+
             var chatBox = document.getElementById('chatBox');
             var spinner = document.createElement('div');
             spinner.className = 'spinner';
