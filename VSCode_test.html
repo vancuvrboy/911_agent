@@ -11,7 +11,7 @@
     <script>
         function testDoPost() {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://https://script.google.com/macros/s/AKfycbxvHG_7ELRW7JEw2STf5-4vZ1w2alHfcxKQzg_jCbZkuWvqT4VG126SUFJWaEugY0g9hg/exec';
+            const targetUrl = 'https://script.google.com/macros/s/AKfycbwvfj-XS9kVqcfoqDEIx1CsP-YkN_MYqfwsdaQA5_pHqZVkG39KY0vDyC4LP2DwbPaKrA/exec';
 
             const simulatedEvent = {
                 type: "application/json",
@@ -24,19 +24,27 @@
 
             fetch(proxyUrl + targetUrl, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(simulatedEvent)
-            }).then(response => response.text())
-              .then(data => {
-                  console.log(data);
-                  alert("Server Response: " + data);
-              })
-              .catch(error => {
-                  console.error('Error:', error);
-              });
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                alert("Server Response: " + JSON.stringify(data));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Fetch Error: ' + error.toString());
+            });
         }
     </script>
 </body>
 </html>
+
