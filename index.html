@@ -225,7 +225,7 @@
 
         function getThreadID(userInput) {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://script.google.com/macros/s/AKfycbxJhTIPX3ISj0OMaKYBBa2U1wb3oTZ8fm1JJlb4alENOP6szJLbgDbO2uNhjD02v5Mr5w/exec'; //new
+            const targetUrl = 'https://script.google.com/macros/s/AKfycbx1EcGqn-THbwJJSZo8r6Gp1a9BM2kp2agFaoLeWID7Kafkf-157uRLyt1HEs6S1IYHRA/exec'; //new
 
             //appendMessage('getThreadID_message_stream', JSON.stringify(message_stream));
             var chatBox = document.getElementById('chatBox');
@@ -252,7 +252,6 @@
                         appendMessage('OpenAI', 'Error: ' + JSON.stringify(data.error));
                     } else if (data.message) {
                         appendMessage('911 Operator', data.message);
-                        //appendMessage('in getThreadID ', 'Thread ID: ' + data.threadID);
                         threadID = data.threadID;
                     } else {
                         console.error('Unexpected response structure:', data);
@@ -267,7 +266,7 @@
     
         function sendPostRequest(userInput) {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://script.google.com/macros/s/AKfycbz0qNmv0VCS1gi2NYsPWLBVuJRdPLUxNIFSoFDMxZxtytFZYToIE2n-wcCJSY_sXO9_SQ/exec';
+            const targetUrl = 'https://script.google.com/macros/s/AKfycbx1EcGqn-THbwJJSZo8r6Gp1a9BM2kp2agFaoLeWID7Kafkf-157uRLyt1HEs6S1IYHRA/exec';
 
             //appendMessage('sendPostRequest_message_stream', JSON.stringify(message_stream));
             var chatBox = document.getElementById('chatBox');
