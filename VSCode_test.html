@@ -11,15 +11,12 @@
     <script>
         function testDoPost() {
             const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-            const targetUrl = 'https://script.google.com/macros/s/AKfycbwvfj-XS9kVqcfoqDEIx1CsP-YkN_MYqfwsdaQA5_pHqZVkG39KY0vDyC4LP2DwbPaKrA/exec';
+            const targetUrl = 'https://script.google.com/macros/s/AKfycbx9dridUrYxqrCkzYnzezkoCi3QXUML3EckP91Rd3OgYdseH6QnVBPzDKF98_ZGjxxIhw/exec';
 
             const simulatedEvent = {
-                type: "application/json",
-                contents: JSON.stringify({
-                    query: JSON.stringify([
-                        { "role": "user", "content": "Help, I've fallen and I can't get up!" }
-                    ])
-                })
+                query: [  // Simplified structure, no need to double stringify here
+                    { "role": "user", "content": "Help, I've fallen and I can't get up!" }
+                ]
             };
 
             fetch(proxyUrl + targetUrl, {
@@ -28,16 +25,11 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(simulatedEvent)
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.json();
-            })
+                body: JSON.stringify(simulatedEvent)  // Only stringify once here
+            }).then(response => response.json())
             .then(data => {
                 console.log(data);
-                alert("Server Response: " + JSON.stringify(data));
+                alert("Server Response: " + JSON.stringify(data));  // Ensure JSON data is stringified for display
             })
             .catch(error => {
                 console.error('Error:', error);
